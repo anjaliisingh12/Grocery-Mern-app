@@ -1,21 +1,24 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { dummyProducts } from "../assets/assets";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { dummyProducts } from "../assets/assets";
 
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL = "http://greencart-backend.onrender.com";
-
-// eslint-disable-next-line
+// ================= CONTEXT =================
 export const AppContext = createContext();
 
-export const AppContextProvider = ({ children }) => {
+// ================= AXIOS SETUP =================
+axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
+axios.defaults.withCredentials = true;
+
+// ================= PROVIDER =================
+const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
-  const currency = import.meta.env.VITE_CURRENCY;
+  const currency = import.meta.env.VITE_CURRENCY || "₹";
 
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // ✅ ADD THIS (VERY IMPORTANT)
+  const [loading, setLoading] = useState(true);
   const [isSeller, setIsSeller] = useState(false);
   const [showUserLogin, setShowUserLogin] = useState(false);
   const [allProducts, setAllProducts] = useState([]);
@@ -23,32 +26,28 @@ export const AppContextProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
 
-  // ================= SELLER AUTH =================
-  const fetchSeller = useCallback(async () => {
-    try {
-      const { data } = await axios.get("/api/seller/is-auth");
-      setIsSeller(data.success ? true : false);
-    } catch (error) {
-      console.error("Failed to fetch seller status:", error);
-      setIsSeller(false);
-    }
-  }, []);
-
   // ================= USER AUTH =================
   const fetchUser = useCallback(async () => {
     try {
       const { data } = await axios.get("/api/user/is-auth");
-
-      if (data.success) {
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (error) {
-      console.error("Failed to fetch user data:", error);
+      if (data.success) setUser(data.user);
+      else setUser(null);
+    } catch (err) {
+      console.log(err);
       setUser(null);
     } finally {
-      setLoading(false); // ✅ THIS FIXES BLANK SCREEN AFTER LOGIN
+      setLoading(false);
+    }
+  }, []);
+
+  // ================= SELLER AUTH =================
+  const fetchSeller = useCallback(async () => {
+    try {
+      const { data } = await axios.get("/api/seller/is-auth");
+      setIsSeller(!!data.success);
+    } catch (err) {
+      console.log(err);
+      setIsSeller(false);
     }
   }, []);
 
@@ -56,15 +55,14 @@ export const AppContextProvider = ({ children }) => {
   const fetchProducts = useCallback(async () => {
     try {
       const { data } = await axios.get("/api/product/list");
-
       if (data.success) {
         setAllProducts(data.products);
         setBestSellerProducts(data.products.slice(0, 5));
       } else {
-        toast.error(data.message);
+        throw new Error("Product fetch failed");
       }
-    } catch (error) {
-      console.error("Failed to fetch products. Using dummy data.", error);
+    } catch (err) {
+      console.log(err);
       setAllProducts(dummyProducts);
       setBestSellerProducts(dummyProducts.slice(0, 5));
     }
@@ -72,32 +70,28 @@ export const AppContextProvider = ({ children }) => {
 
   // ================= CART =================
   const addToCart = (itemId) => {
-    const cartData = { ...cartItems };
-    cartData[itemId] = (cartData[itemId] || 0) + 1;
-    setCartItems(cartData);
-    toast.success("Added to Cart");
+    setCartItems((prev) => ({
+      ...prev,
+      [itemId]: (prev[itemId] || 0) + 1,
+    }));
+    toast.success("Added to cart");
   };
 
   const updateCartItem = (itemId, quantity) => {
-    const cartData = { ...cartItems };
-    cartData[itemId] = quantity;
-    setCartItems(cartData);
+    setCartItems((prev) => ({ ...prev, [itemId]: quantity }));
   };
 
   const removeFromCart = (itemId) => {
-    const cartData = { ...cartItems };
-    if (cartData[itemId]) {
-      cartData[itemId] -= 1;
-      if (cartData[itemId] === 0) delete cartData[itemId];
-    }
-    setCartItems(cartData);
+    setCartItems((prev) => {
+      const updated = { ...prev };
+      if (updated[itemId] > 1) updated[itemId]--;
+      else delete updated[itemId];
+      return updated;
+    });
   };
 
-  const getCartCount = () => {
-    let total = 0;
-    for (const id in cartItems) total += cartItems[id];
-    return total;
-  };
+  const getCartCount = () =>
+    Object.values(cartItems).reduce((a, b) => a + b, 0);
 
   const getCartAmount = () => {
     let total = 0;
@@ -105,7 +99,7 @@ export const AppContextProvider = ({ children }) => {
       const product = allProducts.find((p) => p._id === id);
       if (product) total += product.offerPrice * cartItems[id];
     }
-    return Math.floor(total * 100) / 100;
+    return Math.round(total * 100) / 100;
   };
 
   // ================= INITIAL LOAD =================
@@ -115,25 +109,25 @@ export const AppContextProvider = ({ children }) => {
     fetchProducts();
   }, [fetchUser, fetchSeller, fetchProducts]);
 
-  // ================= SYNC CART =================
+  // ================= SYNC CART FROM USER =================
   useEffect(() => {
-    if (user?.cartItems) {
-      setCartItems(user.cartItems);
-    } else {
-      setCartItems({});
-    }
+    if (user?.cartItems) setCartItems(user.cartItems);
+    else setCartItems({});
   }, [user]);
 
+  // ================= SYNC CART TO SERVER =================
   useEffect(() => {
-    const updateCart = async () => {
+    if (!user) return;
+
+    const timer = setTimeout(async () => {
       try {
         await axios.post("/api/cart/update", { cartItems });
-      } catch (error) {
-        console.error(error.message);
+      } catch (err) {
+        console.log(err);
       }
-    };
+    }, 500);
 
-    if (user) updateCart();
+    return () => clearTimeout(timer);
   }, [cartItems, user]);
 
   // ================= CONTEXT VALUE =================
@@ -141,27 +135,25 @@ export const AppContextProvider = ({ children }) => {
     navigate,
     user,
     setUser,
-    loading, // ✅ EXPOSE LOADING
+    loading,
     isSeller,
-    setIsSeller,
     showUserLogin,
     setShowUserLogin,
     allProducts,
+    bestSellerProducts,
     currency,
+    cartItems,
     addToCart,
     updateCartItem,
     removeFromCart,
-    cartItems,
+    getCartCount,
+    getCartAmount,
     searchQuery,
     setSearchQuery,
-    bestSellerProducts,
-    setBestSellerProducts,
-    getCartAmount,
-    getCartCount,
-    axios,
-    fetchProducts,
     fetchUser,
     fetchSeller,
+    fetchProducts,
+    axios,
   };
 
   return (
@@ -171,4 +163,5 @@ export const AppContextProvider = ({ children }) => {
   );
 };
 
-export default AppContext;
+// ✅ ONLY NAMED EXPORT (NO DEFAULT)
+export { AppContextProvider };

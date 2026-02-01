@@ -1,10 +1,15 @@
 import jwt from 'jsonwebtoken';
 
 const authSeller = async (req, res, next) => {
+
+    // ✅ Allow CORS preflight
+    if (req.method === "OPTIONS") {
+        return next();
+    }
+
     const { sellerToken } = req.cookies;
 
     if (!sellerToken) {
-        // Consolidated unauthorized messages for consistency
         return res.json({ success: false, message: 'Not Authorized' });
     }
 
@@ -18,7 +23,8 @@ const authSeller = async (req, res, next) => {
         }
 
     } catch (error) {
-        res.json({ success: false, message: 'Not Authorized' });
+        return res.json({ success: false, message: 'Not Authorized' });
     }
-}
+};
+
 export default authSeller;

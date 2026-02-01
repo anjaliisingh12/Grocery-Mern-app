@@ -1,6 +1,12 @@
 import jwt from 'jsonwebtoken';
 
 const authUser = async (req, res, next) => {
+
+    // ✅ Allow CORS preflight request
+    if (req.method === "OPTIONS") {
+        return next();
+    }
+
     const { token } = req.cookies;
 
     if (!token) {
@@ -14,10 +20,10 @@ const authUser = async (req, res, next) => {
             return res.json({ success: false, message: 'Invalid token' });
         }
 
-        req.userId = decodedToken.id; // Correctly setting the user ID on the request object
+        req.userId = decodedToken.id;
         next();
     } catch (error) {
-        console.error(error); // Log the actual error for debugging
+        console.error(error);
         return res.json({ success: false, message: 'Authentication failed' });
     }
 };
