@@ -1,4 +1,4 @@
-🛒 Grocery MERN Stack E-commerce App
+🛒 Grocery MERN Stack E-commerce App http://greencart-frontend-anjali-01.s3-website.us-east-2.amazonaws.com
 A full-stack application for browsing, ordering, and managing grocery products, 
 featuring separate customer and seller interfaces. 
 Built using the MERN stack with a focus on secure authentication and data handling.
@@ -58,7 +58,7 @@ SELLER_PASSWORD = anjali123
 ▶️ How to Run
 npm run dev  # or your defined start script
 
-The application will open in your browser, typically at http://localhost:5174.
+The application will open in your browser, typically at http://localhost:5173.
 
 
 
