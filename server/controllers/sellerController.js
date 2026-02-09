@@ -1,66 +1,94 @@
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import jwt from "jsonwebtoken";
 
-// Login Seller: /api/seller/login
+// =======================
+// SELLER LOGIN
+// =======================
 export const sellerLogin = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        
-        // --- START DEBUGGING LOGS ---
-        console.log('--- LOGIN ATTEMPT ---');
-        console.log('Submitted Email:', email);
-        console.log('Expected Email (from .env):', process.env.SELLER_EMAIL);
-        console.log('Submitted Password:', password);
-        console.log('Expected Password (from .env):', process.env.SELLER_PASSWORD);
-        console.log('-------------------------');
-        // --- END DEBUGGING LOGS ---
+  try {
+    const { email, password } = req.body;
 
-        // This is a direct check against plain-text passwords from .env
-        // Note: This is not secure in a production environment.
-        const isPasswordCorrect = (password === process.env.SELLER_PASSWORD);
-        const isEmailCorrect = (email === process.env.SELLER_EMAIL);
+    const cleanEmail = email?.trim();
+    const cleanPassword = password?.trim();
 
-        if (isPasswordCorrect && isEmailCorrect) {
-            const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: '7d' });
-
-            res.cookie('sellerToken', token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-                maxAge: 7 * 24 * 60 * 60 * 1000
-            });
-
-            return res.json({ success: true, message: "Logged In" });
-        } else {
-            return res.status(401).json({ success: false, message: "Invalid Credentials" });
-        }
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ success: false, message: "Server error" });
+    if (
+      cleanEmail !== process.env.SELLER_EMAIL ||
+      cleanPassword !== process.env.SELLER_PASSWORD
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Credentials",
+      });
     }
+
+    const token = jwt.sign(
+      { role: "seller", email: cleanEmail },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    // ✅ ONLY CORRECT COOKIE CONFIG FOR S3 + EC2
+    res.cookie("sellerToken", token, {
+      httpOnly: true,
+      secure: true,        // ✅ MUST
+      sameSite: "none",    // ✅ MUST
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    return res.json({
+      success: true,
+      message: "Seller logged in successfully",
+    });
+  } catch (error) {
+    console.error("Seller login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
 };
 
-// Seller isAuth: /api/seller/is-auth
+// =======================
+// SELLER IS AUTH
+// =======================
 export const isSellerAuth = async (req, res) => {
-    try {
-        return res.json({ success: true });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ success: false, message: "Server error" });
+  try {
+    const token = req.cookies.sellerToken;
+
+    if (!token) {
+      return res.status(401).json({ success: false });
     }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.role !== "seller") {
+      return res.status(403).json({ success: false });
+    }
+
+    return res.json({ success: true });
+  } catch {
+    return res.status(401).json({ success: false });
+  }
 };
 
-// Logout Seller: /api/seller/logout
+// =======================
+// SELLER LOGOUT
+// =======================
 export const sellerLogout = async (req, res) => {
-    try {
-        res.clearCookie('sellerToken', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-        });
-        return res.json({ success: true, message: "Logged Out" });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).json({ success: false, message: "Server error" });
-    }
+  try {
+    res.clearCookie("sellerToken", {
+      httpOnly: true,
+      secure: true,     // ✅ SAME AS LOGIN
+      sameSite: "none", // ✅ SAME AS LOGIN
+    });
+
+    return res.json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
 };

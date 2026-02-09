@@ -14,33 +14,42 @@ import addressRouter from "./routes/addressRoutes.js";
 import orderRouter from "./routes/orderRoute.js";
 
 const app = express();
-const port = process.env.PORT || 4000;
+const PORT = process.env.PORT || 4000;
 
-// ===== CORS (SABSE PEHLE – FIXED) =====
-app.use(
-  cors({
-    origin: [
-      "https://greencart-frontend-anjali-01.s3-website.us-east-2.amazonaws.com"
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-// ✅ Preflight
-app.options("*", cors());
+/* ======================
+   ✅ FINAL CORS — 100% FIX
+   ====================== */
 
-// ===== MIDDLEWARES =====
-app.use(express.json());
+const FRONTEND_ORIGIN =
+  "http://greencart-frontend-anjali-01.s3-website.us-east-2.amazonaws.com";
+
+const corsOptions = {
+  origin: FRONTEND_ORIGIN,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
+/* ======================
+   MIDDLEWARES
+   ====================== */
 app.use(cookieParser());
+app.use(express.json());
 
-// ===== DB & CLOUDINARY =====
+/* ======================
+   DB & CLOUDINARY
+   ====================== */
 connectDB();
 connectCloudinary();
 
-// ===== ROUTES =====
+/* ======================
+   ROUTES
+   ====================== */
 app.get("/", (req, res) => {
-  res.send("API is Working");
+  res.send("GreenCart backend running 🚀");
 });
 
 app.use("/api/user", userRouter);
@@ -50,7 +59,9 @@ app.use("/api/cart", cartRouter);
 app.use("/api/address", addressRouter);
 app.use("/api/order", orderRouter);
 
-// ===== SERVER =====
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+/* ======================
+   SERVER START
+   ====================== */
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });

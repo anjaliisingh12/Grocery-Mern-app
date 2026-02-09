@@ -8,14 +8,16 @@ import { dummyProducts } from "../assets/assets";
 // ================= CONTEXT =================
 export const AppContext = createContext();
 
-// ================= AXIOS SETUP =================
-axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
-axios.defaults.withCredentials = true;
+// ================= AXIOS INSTANCE =================
+export const axiosInstance = axios.create({
+  baseURL: "http://3.142.92.137:4000", // ✅ backend only
+  withCredentials: true,
+});
 
 // ================= PROVIDER =================
 const AppContextProvider = ({ children }) => {
   const navigate = useNavigate();
-  const currency = import.meta.env.VITE_CURRENCY || "₹";
+  const currency = import.meta.env.VITE_CURRENCY;
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -29,11 +31,12 @@ const AppContextProvider = ({ children }) => {
   // ================= USER AUTH =================
   const fetchUser = useCallback(async () => {
     try {
-      const { data } = await axios.get("/api/user/is-auth");
+      const { data } = await axiosInstance.get("/api/user/is-auth",
+        { withCredentials: true}
+      );
       if (data.success) setUser(data.user);
       else setUser(null);
-    } catch (err) {
-      console.log(err);
+    } catch {
       setUser(null);
     } finally {
       setLoading(false);
@@ -42,27 +45,31 @@ const AppContextProvider = ({ children }) => {
 
   // ================= SELLER AUTH =================
   const fetchSeller = useCallback(async () => {
-    try {
-      const { data } = await axios.get("/api/seller/is-auth");
-      setIsSeller(!!data.success);
-    } catch (err) {
-      console.log(err);
+  try {
+    const { data } = await axiosInstance.get("/api/seller/is-auth", {
+      withCredentials: true,
+    });
+
+    if (data.success) {
+      setIsSeller(true);
+    } else {
       setIsSeller(false);
     }
-  }, []);
+  } catch (error) {
+     console.log(error)
+    setIsSeller(false); // ✅ FAIL = NOT LOGGED IN
+  }
+}, []);
 
   // ================= PRODUCTS =================
   const fetchProducts = useCallback(async () => {
     try {
-      const { data } = await axios.get("/api/product/list");
+      const { data } = await axiosInstance.get("/api/product/list");
       if (data.success) {
         setAllProducts(data.products);
         setBestSellerProducts(data.products.slice(0, 5));
-      } else {
-        throw new Error("Product fetch failed");
       }
-    } catch (err) {
-      console.log(err);
+    } catch {
       setAllProducts(dummyProducts);
       setBestSellerProducts(dummyProducts.slice(0, 5));
     }
@@ -104,31 +111,16 @@ const AppContextProvider = ({ children }) => {
 
   // ================= INITIAL LOAD =================
   useEffect(() => {
-    fetchUser();
-    fetchSeller();
-    fetchProducts();
-  }, [fetchUser, fetchSeller, fetchProducts]);
+  fetchUser();
+  fetchSeller();
+  fetchProducts();
+}, [ fetchUser, fetchSeller, fetchProducts]);
 
-  // ================= SYNC CART FROM USER =================
+  // ================= SYNC CART =================
   useEffect(() => {
     if (user?.cartItems) setCartItems(user.cartItems);
     else setCartItems({});
   }, [user]);
-
-  // ================= SYNC CART TO SERVER =================
-  useEffect(() => {
-    if (!user) return;
-
-    const timer = setTimeout(async () => {
-      try {
-        await axios.post("/api/cart/update", { cartItems });
-      } catch (err) {
-        console.log(err);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [cartItems, user]);
 
   // ================= CONTEXT VALUE =================
   const value = {
@@ -153,7 +145,7 @@ const AppContextProvider = ({ children }) => {
     fetchUser,
     fetchSeller,
     fetchProducts,
-    axios,
+    axios: axiosInstance, // ✅ use this everywhere
   };
 
   return (
@@ -163,5 +155,4 @@ const AppContextProvider = ({ children }) => {
   );
 };
 
-// ✅ ONLY NAMED EXPORT (NO DEFAULT)
 export { AppContextProvider };

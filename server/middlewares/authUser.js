@@ -1,31 +1,44 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
 const authUser = async (req, res, next) => {
-
-    // ✅ Allow CORS preflight request
+  try {
+    // ✅ Allow preflight requests
     if (req.method === "OPTIONS") {
-        return next();
+      return next();
     }
 
-    const { token } = req.cookies;
+    // ✅ Safe cookie access
+    const token = req.cookies?.token;
 
     if (!token) {
-        return res.json({ success: false, message: 'Not Authorized' });
+      return res.status(401).json({
+        success: false,
+        message: "Not Authorized: Token missing",
+      });
     }
 
-    try {
-        const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+    // ✅ Verify JWT
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        if (!decodedToken || !decodedToken.id) {
-            return res.json({ success: false, message: 'Invalid token' });
-        }
-
-        req.userId = decodedToken.id;
-        next();
-    } catch (error) {
-        console.error(error);
-        return res.json({ success: false, message: 'Authentication failed' });
+    if (!decoded || !decoded.id) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
     }
+
+    // ✅ Attach user id to request
+    req.userId = decoded.id;
+
+    next();
+  } catch (error) {
+    console.error("Auth error:", error.message);
+
+    return res.status(401).json({
+      success: false,
+      message: "Authentication failed",
+    });
+  }
 };
 
 export default authUser;
