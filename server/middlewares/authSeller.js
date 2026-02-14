@@ -11,9 +11,11 @@ const authSeller = (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(sellerToken, process.env.JWT_SECRET);
+    const decoded = jwt.verify(
+      sellerToken,
+      process.env.JWT_SECRET
+    );
 
-    // ✅ Role check (MOST IMPORTANT)
     if (decoded.role !== "seller") {
       return res.status(403).json({
         success: false,
@@ -21,15 +23,6 @@ const authSeller = (req, res, next) => {
       });
     }
 
-    // ✅ Optional extra safety
-    if (decoded.email !== process.env.SELLER_EMAIL) {
-      return res.status(403).json({
-        success: false,
-        message: "Invalid seller",
-      });
-    }
-
-    // attach seller info if needed later
     req.seller = decoded;
 
     next();

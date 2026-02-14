@@ -21,16 +21,18 @@ export const sellerLogin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { role: "seller", email: cleanEmail },
+      {
+        role: "seller",
+        email: cleanEmail,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    // ✅ ONLY CORRECT COOKIE CONFIG FOR S3 + EC2
     res.cookie("sellerToken", token, {
       httpOnly: true,
-      secure: true,        // ✅ MUST
-      sameSite: "none",    // ✅ MUST
+      secure: true,       // MUST for HTTPS
+      sameSite: "none",   // MUST for cross-origin
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -40,7 +42,8 @@ export const sellerLogin = async (req, res) => {
     });
   } catch (error) {
     console.error("Seller login error:", error);
-    res.status(500).json({
+
+    return res.status(500).json({
       success: false,
       message: "Server error",
     });
@@ -48,24 +51,27 @@ export const sellerLogin = async (req, res) => {
 };
 
 // =======================
-// SELLER IS AUTH
+// CHECK SELLER AUTH
 // =======================
 export const isSellerAuth = async (req, res) => {
   try {
-    const token = req.cookies.sellerToken;
+    const token = req.cookies?.sellerToken;
 
     if (!token) {
       return res.status(401).json({ success: false });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET
+    );
 
     if (decoded.role !== "seller") {
       return res.status(403).json({ success: false });
     }
 
     return res.json({ success: true });
-  } catch {
+  } catch (error) {
     return res.status(401).json({ success: false });
   }
 };
@@ -77,8 +83,8 @@ export const sellerLogout = async (req, res) => {
   try {
     res.clearCookie("sellerToken", {
       httpOnly: true,
-      secure: true,     // ✅ SAME AS LOGIN
-      sameSite: "none", // ✅ SAME AS LOGIN
+      secure: true,
+      sameSite: "none",
     });
 
     return res.json({
@@ -86,7 +92,7 @@ export const sellerLogout = async (req, res) => {
       message: "Logged out successfully",
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Server error",
     });
