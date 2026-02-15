@@ -4,33 +4,55 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 const SellerLogin = () => {
-  const { isSeller, setIsSeller, axios } = useAppContext();
+  const { isSeller, axios, fetchSeller } = useAppContext();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // ✅ NEW: loading state
+  const [loading, setLoading] = useState(false);
+
+  // ✅ NEW: checking auth state (important for page blink fix)
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // 🔥 First check if seller already logged in
   useEffect(() => {
-    if (isSeller) {
-      navigate("/seller");
+    const checkAuth = async () => {
+      await fetchSeller();
+      setCheckingAuth(false);
+    };
+
+    checkAuth();
+  }, [fetchSeller]);
+
+  // 🔥 Redirect if seller authenticated
+  useEffect(() => {
+    if (!checkingAuth && isSeller) {
+      navigate("/seller", { replace: true });
     }
-  }, [isSeller, navigate]);
+  }, [isSeller, checkingAuth, navigate]);
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
     try {
+      setLoading(true);
+
       const { data } = await axios.post(
         "/api/seller/login",
-        { email, password },
-        {
-          withCredentials: true, // 🔥 MOST IMPORTANT LINE
-        }
+        { email, password }
       );
 
       if (data.success) {
-        setIsSeller(true);
         toast.success(data.message);
+
+        // ✅ SAVE TOKEN
+        localStorage.setItem("sellerToken", data.token);
+
+        await fetchSeller();
+
+        navigate("/seller");
       } else {
         toast.error(data.message);
       }
@@ -38,8 +60,19 @@ const SellerLogin = () => {
       toast.error(
         error.response?.data?.message || "Login failed"
       );
+    } finally {
+      setLoading(false);
     }
   };
+
+  // 🔥 IMPORTANT: prevent blink
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Checking authentication...</p>
+      </div>
+    );
+  }
 
   return !isSeller && (
     <form
@@ -73,8 +106,11 @@ const SellerLogin = () => {
           />
         </div>
 
-        <button className="bg-orange-500 text-white w-full py-2 rounded">
-          Login
+        <button
+          disabled={loading}
+          className="bg-orange-500 text-white w-full py-2 rounded disabled:opacity-60"
+        >
+          {loading ? "Logging in..." : "Login"}
         </button>
       </div>
     </form>

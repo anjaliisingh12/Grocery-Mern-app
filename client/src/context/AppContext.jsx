@@ -10,8 +10,25 @@ export const AppContext = createContext();
 
 // ================= AXIOS INSTANCE =================
 export const axiosInstance = axios.create({
-  baseURL: "http://3.142.92.137:4000", // ✅ backend only
-  withCredentials: true,
+  baseURL: "http://3.142.92.137:4000",
+  headers: {
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
+  },
+});
+
+// 🔥 SMART JWT INTERCEPTOR (USER + SELLER BOTH)
+axiosInstance.interceptors.request.use((config) => {
+  const sellerToken = localStorage.getItem("sellerToken");
+  const userToken = localStorage.getItem("token");
+
+  if (sellerToken) {
+    config.headers.Authorization = `Bearer ${sellerToken}`;
+  } else if (userToken) {
+    config.headers.Authorization = `Bearer ${userToken}`;
+  }
+
+  return config;
 });
 
 // ================= PROVIDER =================
@@ -30,41 +47,59 @@ const AppContextProvider = ({ children }) => {
 
   // ================= USER AUTH =================
   const fetchUser = useCallback(async () => {
-    try {
-      const { data } = await axiosInstance.get("/api/user/is-auth",
-        { withCredentials: true}
-      );
-      if (data.success) setUser(data.user);
-      else setUser(null);
-    } catch {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
       setUser(null);
-    } finally {
-      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data } = await axiosInstance.get("/api/user/profile");
+
+      if (data.success) {
+        setUser(data.user);
+      } else {
+        setUser(null);
+        localStorage.removeItem("token");
+      }
+    } catch (error) {
+      console.log(error);
+      setUser(null);
+      localStorage.removeItem("token");
     }
   }, []);
 
   // ================= SELLER AUTH =================
   const fetchSeller = useCallback(async () => {
-  try {
-    const { data } = await axiosInstance.get("/api/seller/is-auth", {
-      withCredentials: true,
-    });
+    const token = localStorage.getItem("sellerToken");
 
-    if (data.success) {
-      setIsSeller(true);
-    } else {
+    if (!token) {
       setIsSeller(false);
+      return;
     }
-  } catch (error) {
-     console.log(error)
-    setIsSeller(false); // ✅ FAIL = NOT LOGGED IN
-  }
-}, []);
+
+    try {
+      const { data } = await axiosInstance.get("/api/seller/is-auth");
+
+      if (data.success) {
+        setIsSeller(true);
+      } else {
+        setIsSeller(false);
+        localStorage.removeItem("sellerToken");
+      }
+    } catch (error) {
+      console.log(error);
+      setIsSeller(false);
+      localStorage.removeItem("sellerToken");
+    }
+  }, []);
 
   // ================= PRODUCTS =================
   const fetchProducts = useCallback(async () => {
     try {
       const { data } = await axiosInstance.get("/api/product/list");
+
       if (data.success) {
         setAllProducts(data.products);
         setBestSellerProducts(data.products.slice(0, 5));
@@ -102,19 +137,26 @@ const AppContextProvider = ({ children }) => {
 
   const getCartAmount = () => {
     let total = 0;
+
     for (const id in cartItems) {
       const product = allProducts.find((p) => p._id === id);
       if (product) total += product.offerPrice * cartItems[id];
     }
+
     return Math.round(total * 100) / 100;
   };
 
   // ================= INITIAL LOAD =================
   useEffect(() => {
-  fetchUser();
-  fetchSeller();
-  fetchProducts();
-}, [ fetchUser, fetchSeller, fetchProducts]);
+    const init = async () => {
+      await fetchUser();
+      await fetchSeller();
+      await fetchProducts();
+      setLoading(false);
+    };
+
+    init();
+  }, [fetchUser, fetchSeller, fetchProducts]);
 
   // ================= SYNC CART =================
   useEffect(() => {
@@ -128,7 +170,9 @@ const AppContextProvider = ({ children }) => {
     user,
     setUser,
     loading,
+    setLoading,
     isSeller,
+    setIsSeller,
     showUserLogin,
     setShowUserLogin,
     allProducts,
@@ -145,7 +189,7 @@ const AppContextProvider = ({ children }) => {
     fetchUser,
     fetchSeller,
     fetchProducts,
-    axios: axiosInstance, // ✅ use this everywhere
+    axios: axiosInstance,
   };
 
   return (

@@ -4,29 +4,26 @@ import React, {
   useCallback,
   useContext,
 } from "react";
-import axios from "axios";
 import { AppContext } from "../context/AppContext";
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
 
-  // ✅ CORRECT: currency from context
-  const { currency } = useContext(AppContext);
+  // ✅ GET AXIOS INSTANCE + CURRENCY FROM CONTEXT
+  const { currency, axios } = useContext(AppContext);
 
   // ================= FETCH PRODUCTS =================
   const fetchProducts = useCallback(async () => {
     try {
-      const { data } = await axios.get("/api/product/list", {
-        withCredentials: true,
-      });
+      const { data } = await axios.get("/api/product/list");
 
       if (data.success) {
         setProducts(data.products);
       }
     } catch (error) {
-      console.error(error);
+      console.error("FETCH PRODUCT ERROR:", error);
     }
-  }, []);
+  }, [axios]);
 
   useEffect(() => {
     fetchProducts();
@@ -35,15 +32,14 @@ const ProductList = () => {
   // ================= CHANGE STOCK =================
   const toggleStock = async (id, currentStatus) => {
     try {
-      await axios.post(
-        "/api/product/stock",
-        { id, inStock: !currentStatus },
-        { withCredentials: true }
-      );
+      await axios.post("/api/product/stock", {
+        id,
+        inStock: !currentStatus,
+      });
 
       fetchProducts();
     } catch (error) {
-      console.error(error);
+      console.error("STOCK UPDATE ERROR:", error);
     }
   };
 
@@ -78,7 +74,6 @@ const ProductList = () => {
                     {item.name}
                   </td>
 
-                  {/* ✅ FIXED: no hardcoded ₹ */}
                   <td className="p-2 border">
                     {currency}{item.offerPrice}
                   </td>

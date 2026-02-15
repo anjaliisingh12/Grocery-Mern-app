@@ -23,7 +23,8 @@ import ProductList from './pages/ProductList';
 const App = () => {
     const isSellerPath = useLocation().pathname.includes('seller');
     const { showUserLogin, isSeller } = useAppContext();
-
+    console.log("App isSeller:", isSeller);
+    
     return (
         <div className='text-default min-h-screen text-gray-700 bg-white'>
             {!isSellerPath && <Navbar />}
@@ -44,7 +45,7 @@ const App = () => {
                     
                     {/* Seller Routes */}
 
-                    <Route path="/seller" element={isSeller ? <SellerLayout /> : <SellerLogin />}>
+                    <Route path="/seller/*" element={isSeller ? <SellerLayout /> : <SellerLogin />}>
                         <Route index element={<AddProduct />} />
                         <Route path="product-list" element={<ProductList />} />
                         <Route path="orders" element={<Orders />} />

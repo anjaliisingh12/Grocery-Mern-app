@@ -7,12 +7,9 @@ export const sellerLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const cleanEmail = email?.trim();
-    const cleanPassword = password?.trim();
-
     if (
-      cleanEmail !== process.env.SELLER_EMAIL ||
-      cleanPassword !== process.env.SELLER_PASSWORD
+      email !== process.env.SELLER_EMAIL ||
+      password !== process.env.SELLER_PASSWORD
     ) {
       return res.status(401).json({
         success: false,
@@ -21,56 +18,51 @@ export const sellerLogin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      {
-        role: "seller",
-        email: cleanEmail,
-      },
+      { role: "seller" },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    res.cookie("sellerToken", token, {
-      httpOnly: true,
-      secure: true,       // MUST for HTTPS
-      sameSite: "none",   // MUST for cross-origin
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
+    // 🔥 IMPORTANT
     return res.json({
       success: true,
-      message: "Seller logged in successfully",
+      message: "Logged In",
+      token: token  // ✅ THIS LINE WAS MISSING
     });
-  } catch (error) {
-    console.error("Seller login error:", error);
 
+  } catch (error) {
     return res.status(500).json({
       success: false,
       message: "Server error",
     });
   }
 };
-
 // =======================
 // CHECK SELLER AUTH
 // =======================
 export const isSellerAuth = async (req, res) => {
   try {
-    const token = req.cookies?.sellerToken;
+    res.setHeader("Cache-Control", "no-store");
 
-    if (!token) {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
       return res.status(401).json({ success: false });
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET
-    );
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     if (decoded.role !== "seller") {
       return res.status(403).json({ success: false });
     }
 
-    return res.json({ success: true });
+    return res.json({
+      success: true,
+      seller: true,
+    });
+
   } catch (error) {
     return res.status(401).json({ success: false });
   }
@@ -80,21 +72,8 @@ export const isSellerAuth = async (req, res) => {
 // SELLER LOGOUT
 // =======================
 export const sellerLogout = async (req, res) => {
-  try {
-    res.clearCookie("sellerToken", {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    });
-
-    return res.json({
-      success: true,
-      message: "Logged out successfully",
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
-  }
+  return res.json({
+    success: true,
+    message: "Logged out successfully",
+  });
 };

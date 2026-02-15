@@ -8,9 +8,11 @@ const Login = () => {
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
+    setLoading(true);
 
     try {
       const endpoint =
@@ -24,8 +26,19 @@ const Login = () => {
       const { data } = await axios.post(endpoint, requestData);
 
       if (data.success) {
-        setUser(data.user);
+
+        // 🔥 SAVE TOKEN (VERY IMPORTANT)
+        if (data.token) {
+          localStorage.setItem("token", data.token);
+        }
+
+        // 🔥 SET USER
+        if (data.user) {
+          setUser(data.user);
+        }
+
         setShowUserLogin(false);
+
         toast.success(
           state === "login"
             ? "Login successful!"
@@ -34,9 +47,12 @@ const Login = () => {
       } else {
         toast.error(data.message);
       }
+
     } catch (error) {
       console.error("AUTH ERROR:", error.response?.data || error.message);
       toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -100,7 +116,9 @@ const Login = () => {
         </div>
 
         <p>
-          {state === "login" ? "Create an account?" : "Already have an account?"}{" "}
+          {state === "login"
+            ? "Create an account?"
+            : "Already have an account?"}{" "}
           <span
             onClick={() =>
               setState(state === "login" ? "register" : "login")
@@ -113,9 +131,14 @@ const Login = () => {
 
         <button
           type="submit"
-          className="bg-orange-400 hover:bg-orange-500 text-white py-2 rounded"
+          disabled={loading}
+          className="bg-orange-400 hover:bg-orange-500 text-white py-2 rounded disabled:opacity-50"
         >
-          {state === "login" ? "Login" : "Create Account"}
+          {loading
+            ? "Please wait..."
+            : state === "login"
+            ? "Login"
+            : "Create Account"}
         </button>
       </form>
     </div>

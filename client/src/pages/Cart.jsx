@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAppContext } from "../context/useAppContext";
 import { assets, dummyAddress } from "../assets/assets";
-import axios from "axios";
 import toast from "react-hot-toast";
 
 const Cart = () => {
@@ -18,16 +17,20 @@ const Cart = () => {
     navigate,
     getCartAmount,
     user,
+    axios, // ✅ USE CONTEXT AXIOS (VERY IMPORTANT)
   } = useAppContext();
 
+  // ================= GET CART =================
   const getCart = useCallback(() => {
     let tempArray = [];
+
     for (const key in cartItems) {
       const product = allProducts.find((item) => item._id === key);
       if (product) {
         tempArray.push({ ...product, quantity: cartItems[key] });
       }
     }
+
     setCartArray(tempArray);
   }, [allProducts, cartItems]);
 
@@ -37,7 +40,7 @@ const Cart = () => {
     }
   }, [allProducts, cartItems, getCart]);
 
-  // ✅ PLACE ORDER (COD)
+  // ================= PLACE ORDER =================
   const placeOrder = async () => {
     try {
       if (!user) {
@@ -50,11 +53,17 @@ const Cart = () => {
         quantity: item.quantity,
       }));
 
-      const { data } = await axios.post("/api/order/cod", {
-        userId: user._id,
-        items,
-        address: selectedAddress,
-      });
+      const { data } = await axios.post(
+        "/api/order/cod",
+        {
+          userId: user._id,
+          items,
+          address: selectedAddress,
+        },
+        {
+          withCredentials: true, // ✅ Important if cookies used
+        }
+      );
 
       if (data.success) {
         toast.success("Order placed successfully");
@@ -63,10 +72,13 @@ const Cart = () => {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(
+        error.response?.data?.message || "Order failed"
+      );
     }
   };
 
+  // ================= EMPTY CART =================
   if (Object.keys(cartItems).length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh]">
@@ -81,9 +93,10 @@ const Cart = () => {
     );
   }
 
+  // ================= UI =================
   return (
     <div className="flex flex-col md:flex-row mt-16 gap-10">
-      {/* LEFT */}
+      {/* LEFT SIDE */}
       <div className="flex-1 max-w-4xl">
         <h1 className="text-3xl font-medium mb-6">Shopping Cart</h1>
 
@@ -104,14 +117,19 @@ const Cart = () => {
                 alt={product.name}
                 className="w-20 h-20 object-cover border"
               />
+
               <div>
                 <p className="font-medium">{product.name}</p>
+
                 <div className="flex items-center gap-2">
                   <span>Qty:</span>
                   <select
                     value={product.quantity}
                     onChange={(e) =>
-                      updateCartItem(product._id, Number(e.target.value))
+                      updateCartItem(
+                        product._id,
+                        Number(e.target.value)
+                      )
                     }
                     className="border px-2"
                   >
@@ -134,13 +152,17 @@ const Cart = () => {
               onClick={() => removeFromCart(product._id)}
               className="mx-auto"
             >
-              <img src={assets.remove_icon} className="w-6" />
+              <img
+                src={assets.remove_icon}
+                className="w-6"
+                alt="remove"
+              />
             </button>
           </div>
         ))}
       </div>
 
-      {/* RIGHT */}
+      {/* RIGHT SIDE */}
       <div className="w-full max-w-[360px] border p-5">
         <h2 className="text-xl font-medium">Order Summary</h2>
 
@@ -168,6 +190,7 @@ const Cart = () => {
               {getCartAmount()}
             </span>
           </p>
+
           <p className="flex justify-between">
             <span>Tax (2%)</span>
             <span>
@@ -175,6 +198,7 @@ const Cart = () => {
               {(getCartAmount() * 0.02).toFixed(2)}
             </span>
           </p>
+
           <p className="flex justify-between font-medium text-lg">
             <span>Total</span>
             <span>

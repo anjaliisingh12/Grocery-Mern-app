@@ -1,35 +1,41 @@
 import jwt from "jsonwebtoken";
 
-const authSeller = (req, res, next) => {
+const authSeller = async (req, res, next) => {
   try {
-    const sellerToken = req.cookies?.sellerToken;
+    const authHeader = req.headers.authorization;
 
-    if (!sellerToken) {
+    if (!authHeader) {
       return res.status(401).json({
         success: false,
-        message: "Seller not logged in",
+        message: "Not Authorized",
       });
     }
 
-    const decoded = jwt.verify(
-      sellerToken,
-      process.env.JWT_SECRET
-    );
+    const token = authHeader.split(" ")[1];
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Token Missing",
+      });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     if (decoded.role !== "seller") {
       return res.status(403).json({
         success: false,
-        message: "Forbidden",
+        message: "Access Denied",
       });
     }
 
     req.seller = decoded;
-
     next();
+
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: "Invalid or expired token",
+      message: "Invalid Token",
     });
   }
 };
