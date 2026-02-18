@@ -94,7 +94,7 @@ JWT_SECRET="YOUR_SECURE_SECRET_KEY"
 
 # Seller Credentials (Used for auth logic)
 SELLER_EMAIL=admin@gmail.com
-SELLER_PASSWORD=anjali123
+SELLER_PASSWORD=123456
 
 # CLOUDINARY and other environment variables
 ```
