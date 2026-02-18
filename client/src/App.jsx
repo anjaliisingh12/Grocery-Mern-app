@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Routes, useLocation } from 'react-router-dom';
+import { Route, Routes, useLocation, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 
 import Navbar from './components/Navbar';
@@ -19,43 +19,73 @@ import AddProduct from './pages/AddProduct';
 import Orders from './pages/Orders';
 import ProductList from './pages/ProductList';
 
-
 const App = () => {
-    const isSellerPath = useLocation().pathname.includes('seller');
-    const { showUserLogin, isSeller } = useAppContext();
-    console.log("App isSeller:", isSeller);
-    
+  const location = useLocation();
+  const { showUserLogin, isSeller, loading } = useAppContext();
+
+  // Detect seller routes
+  const isSellerPath = location.pathname.includes('/seller');
+
+  if (loading) {
     return (
-        <div className='text-default min-h-screen text-gray-700 bg-white'>
-            {!isSellerPath && <Navbar />}
-            {showUserLogin && <Login />}
-            <Toaster />
-
-            <div className={`${isSellerPath ? '' : 'px-6 md:px-16 lg:px-24 cl:px-32'}`}>
-                <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/AllProducts" element={<AllProducts />} />
-                    <Route path="/Products/:category" element={<ProductCategory />} />
-                    {/* FIX: Use a unique path for the ProductDetails component */}
-                    <Route path="/product-details/:id" element={<ProductDetails />} />
-                    <Route path="/add-address" element={<AddAddress />} />
-                    <Route path="/myorders" element={<MyOrders />} />
-                    <Route path="/cart" element={<Cart/>} />
-                    
-                    
-                    {/* Seller Routes */}
-
-                    <Route path="/seller/*" element={isSeller ? <SellerLayout /> : <SellerLogin />}>
-                        <Route index element={<AddProduct />} />
-                        <Route path="product-list" element={<ProductList />} />
-                        <Route path="orders" element={<Orders />} />
-                    </Route>
-                </Routes>
-            </div>
-            
-            {!isSellerPath && <Footer />}
-        </div>
+      <div className="min-h-screen flex items-center justify-center text-lg">
+        Loading...
+      </div>
     );
+  }
+
+  return (
+    <div className='text-default min-h-screen text-gray-700 bg-white'>
+      
+      {/* Hide Navbar on Seller Pages */}
+      {!isSellerPath && <Navbar />}
+
+      {showUserLogin && <Login />}
+      <Toaster />
+
+      <div className={`${isSellerPath ? '' : 'px-6 md:px-16 lg:px-24 cl:px-32'}`}>
+        <Routes>
+
+          {/* ================= USER ROUTES ================= */}
+          <Route path="/" element={<Home />} />
+          <Route path="/AllProducts" element={<AllProducts />} />
+          <Route path="/Products/:category" element={<ProductCategory />} />
+          <Route path="/product-details/:id" element={<ProductDetails />} />
+          <Route path="/add-address" element={<AddAddress />} />
+          <Route path="/myorders" element={<MyOrders />} />
+          <Route path="/cart" element={<Cart />} />
+
+          {/* ================= SELLER LOGIN ================= */}
+          <Route
+            path="/seller/login"
+            element={
+              isSeller
+                ? <Navigate to="/seller" replace />
+                : <SellerLogin />
+            }
+          />
+
+          {/* ================= PROTECTED SELLER ROUTES ================= */}
+          <Route
+            path="/seller/*"
+            element={
+              isSeller
+                ? <SellerLayout />
+                : <Navigate to="/seller/login" replace />
+            }
+          >
+            <Route index element={<AddProduct />} />
+            <Route path="product-list" element={<ProductList />} />
+            <Route path="orders" element={<Orders />} />
+          </Route>
+
+        </Routes>
+      </div>
+
+      {/* Hide Footer on Seller Pages */}
+      {!isSellerPath && <Footer />}
+    </div>
+  );
 };
 
 export default App;

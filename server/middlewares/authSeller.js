@@ -13,13 +13,6 @@ const authSeller = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: "Token Missing",
-      });
-    }
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     if (decoded.role !== "seller") {
@@ -29,7 +22,7 @@ const authSeller = async (req, res, next) => {
       });
     }
 
-    req.seller = decoded;
+    req.userId = decoded.id;   // ✅ IMPORTANT
     next();
 
   } catch (error) {

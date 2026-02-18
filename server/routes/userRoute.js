@@ -1,30 +1,18 @@
-import express from "express";
-import {
-  register,
-  login,
-  isAuth,
-  logout,
-} from "../controllers/userController.js";
-import authUser from "../middlewares/authUser.js";
+import express from 'express';
+import { register, login, isAuth, logout } from '../controllers/userController.js';
 
 const userRouter = express.Router();
 
-/* ======================
-   AUTH ROUTES
-   ====================== */
+// Register
+userRouter.post('/register', register);
 
-// ✅ Preflight support (VERY IMPORTANT for CORS)
-userRouter.options("*", (req, res) => {
-  res.sendStatus(200);
-});
+// Login
+userRouter.post('/login', login);
 
-userRouter.post("/register", register);
-userRouter.post("/login", login);
+// 🔥 IMPORTANT: NO authUser here
+userRouter.get('/is-auth', isAuth);
 
-// ✅ Protected route (correct)
-userRouter.get("/is-auth", authUser, isAuth);
-
-// ✅ Logout WITHOUT auth middleware (important)
-userRouter.post("/logout", logout);
+// Logout (no need authUser here)
+userRouter.post('/logout', logout);
 
 export default userRouter;

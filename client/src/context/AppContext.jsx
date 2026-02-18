@@ -3,7 +3,6 @@ import { createContext, useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { dummyProducts } from "../assets/assets";
 
 // ================= CONTEXT =================
 export const AppContext = createContext();
@@ -11,13 +10,9 @@ export const AppContext = createContext();
 // ================= AXIOS INSTANCE =================
 export const axiosInstance = axios.create({
   baseURL: "http://3.142.92.137:4000",
-  headers: {
-    "Cache-Control": "no-cache",
-    Pragma: "no-cache",
-  },
 });
 
-// 🔥 SMART JWT INTERCEPTOR (USER + SELLER BOTH)
+// ================= INTERCEPTOR =================
 axiosInstance.interceptors.request.use((config) => {
   const sellerToken = localStorage.getItem("sellerToken");
   const userToken = localStorage.getItem("token");
@@ -45,6 +40,19 @@ const AppContextProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
 
+  // ================= LOAD CART FROM LOCALSTORAGE =================
+  useEffect(() => {
+    const savedCart = localStorage.getItem("cartItems");
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart));
+    }
+  }, []);
+
+  // ================= SAVE CART TO LOCALSTORAGE =================
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+  }, [cartItems]);
+
   // ================= USER AUTH =================
   const fetchUser = useCallback(async () => {
     const token = localStorage.getItem("token");
@@ -64,7 +72,7 @@ const AppContextProvider = ({ children }) => {
         localStorage.removeItem("token");
       }
     } catch (error) {
-      console.log(error);
+      console.log(error)
       setUser(null);
       localStorage.removeItem("token");
     }
@@ -89,7 +97,7 @@ const AppContextProvider = ({ children }) => {
         localStorage.removeItem("sellerToken");
       }
     } catch (error) {
-      console.log(error);
+      console.log(error)
       setIsSeller(false);
       localStorage.removeItem("sellerToken");
     }
@@ -104,13 +112,12 @@ const AppContextProvider = ({ children }) => {
         setAllProducts(data.products);
         setBestSellerProducts(data.products.slice(0, 5));
       }
-    } catch {
-      setAllProducts(dummyProducts);
-      setBestSellerProducts(dummyProducts.slice(0, 5));
+    } catch (error) {
+      console.log("PRODUCT FETCH ERROR:", error);
     }
   }, []);
 
-  // ================= CART =================
+  // ================= CART FUNCTIONS =================
   const addToCart = (itemId) => {
     setCartItems((prev) => ({
       ...prev,
@@ -157,12 +164,6 @@ const AppContextProvider = ({ children }) => {
 
     init();
   }, [fetchUser, fetchSeller, fetchProducts]);
-
-  // ================= SYNC CART =================
-  useEffect(() => {
-    if (user?.cartItems) setCartItems(user.cartItems);
-    else setCartItems({});
-  }, [user]);
 
   // ================= CONTEXT VALUE =================
   const value = {
