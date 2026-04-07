@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 4000;
    ====================== */
 
 const FRONTEND_ORIGIN =
-  "http://localhost:5173";
+  "https://grocery-mern-app-jjiw.vercel.app";
 
 const corsOptions = {
   origin: FRONTEND_ORIGIN,
