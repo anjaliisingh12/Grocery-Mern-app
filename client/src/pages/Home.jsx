@@ -1,7 +1,7 @@
 import React from 'react'
 import MainBanner from '../components/MainBanner'
 import Categories from '../components/Categories'
-import Bestseller from '../components/bestseller'
+import BestSeller from '../components/bestseller'
 import BottomBanner from '../components/BottomBanner'
 import Newsletter from '../assets/Newsletter'
 
