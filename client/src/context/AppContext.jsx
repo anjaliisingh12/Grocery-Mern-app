@@ -9,7 +9,7 @@ export const AppContext = createContext();
 
 // ================= AXIOS INSTANCE =================
 export const axiosInstance = axios.create({
-  baseURL: "http://localhost:4000",
+  baseURL: "https://grocery-mern-app-kyut.onrender.com",
 });
 
 // ================= INTERCEPTOR =================
