@@ -10,7 +10,7 @@ const Home = () => {
     <div className='mt-10'>
         <MainBanner/>
         <Categories />
-        <Bestseller />
+        <BestSeller />
         <BottomBanner />
         <Newsletter />
         
