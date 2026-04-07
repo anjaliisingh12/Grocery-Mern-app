@@ -21,7 +21,7 @@ const PORT = process.env.PORT || 4000;
    ====================== */
 
 const FRONTEND_ORIGIN =
-  "http://greencart-frontend-anjali-01.s3-website.us-east-2.amazonaws.com";
+  "http://localhost:5173";
 
 const corsOptions = {
   origin: FRONTEND_ORIGIN,
@@ -31,7 +31,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+// app.options("*", cors(corsOptions));
 
 /* ======================
    MIDDLEWARES

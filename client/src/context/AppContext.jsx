@@ -9,7 +9,7 @@ export const AppContext = createContext();
 
 // ================= AXIOS INSTANCE =================
 export const axiosInstance = axios.create({
-  baseURL: "http://3.142.92.137:4000",
+  baseURL: "http://localhost:4000",
 });
 
 // ================= INTERCEPTOR =================
