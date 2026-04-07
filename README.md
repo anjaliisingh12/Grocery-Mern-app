@@ -9,6 +9,7 @@ Built using the **MERN stack** with a focus on secure authentication and proper 
 ## 🌐 Live Demo
 
 👉 https://greencart-frontend-anjali-01.s3-website.us-east-2.amazonaws.com/
+👉 https://grocery-mern-app-ten.vercel.app/
 
 ---
 
