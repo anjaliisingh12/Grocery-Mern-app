@@ -1,20 +1,23 @@
-import React from 'react'
+import React, { Suspense, lazy } from 'react'
 import MainBanner from '../components/MainBanner'
 import Categories from '../components/Categories'
-import BestSeller from '../components/BestSeller'
-import BottomBanner from '../components/BottomBanner'
-import Newsletter from '../assets/Newsletter'
+
+const BestSeller = lazy(() => import('../components/BestSeller'))
+const BottomBanner = lazy(() => import('../components/BottomBanner'))
+const Newsletter = lazy(() => import('../assets/Newsletter'))
 
 const Home = () => {
   return (
     <div className='mt-10'>
-        <MainBanner/>
-        <Categories />
+      <MainBanner />
+      <Categories />
+
+      <Suspense fallback={<div>Loading...</div>}>
         <BestSeller />
         <BottomBanner />
         <Newsletter />
-        
-      </div>
+      </Suspense>
+    </div>
   )
 }
 
