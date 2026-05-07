@@ -14,13 +14,14 @@ const MainBanner = () => {
 
         <img
           src={assets.main_banner_bg}
-          alt="banner"
+          alt="Fresh grocery banner"
           className="w-full h-full object-cover object-center"
           width="1200"
           height="500"
           loading="eager"
           fetchPriority="high"
           decoding="async"
+          sizes="100vw"
         />
       </picture>
 
@@ -43,6 +44,7 @@ const MainBanner = () => {
               width="20"
               height="20"
               loading="lazy"
+              decoding="async"
             />
 
             <span>Shop now</span>
@@ -60,6 +62,7 @@ const MainBanner = () => {
               width="20"
               height="20"
               loading="lazy"
+              decoding="async"
             />
           </Link>
 
