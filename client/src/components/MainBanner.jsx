@@ -4,21 +4,18 @@ import { assets } from '../assets/assets.js';
 
 const MainBanner = () => {
   return (
-    <div className="relative overflow-hidden bg-[#e6f5f3] rounded-lg">
+    <div className="relative overflow-hidden rounded-xl bg-[#eaf7f5]">
 
       <picture className="block">
-
-        {/* Mobile Image */}
         <source
-          media="(max-width: 768px)"
+          media="(max-width:768px)"
           srcSet={assets.main_banner_bg_sm}
         />
 
-        {/* Desktop Image */}
         <img
           src={assets.main_banner_bg}
           alt="banner"
-          className="w-full h-[220px] md:h-[500px] object-cover block"
+          className="w-full h-[260px] md:h-[500px] object-cover md:object-cover object-center block"
           fetchpriority="high"
           loading="eager"
           decoding="async"
@@ -28,17 +25,18 @@ const MainBanner = () => {
         />
       </picture>
 
-      <div className="absolute inset-0 flex flex-col justify-end md:justify-center px-4 md:px-10 pb-5 md:pb-0">
+      <div className="absolute inset-0 flex flex-col justify-center px-5 md:px-10">
 
-        <h1 className="text-[24px] md:text-5xl font-bold leading-tight max-w-[240px] md:max-w-[420px] text-gray-800">
-          Freshness you can Trust, Savings you will love!
+        <h1 className="text-[20px] sm:text-2xl md:text-5xl font-bold leading-tight max-w-[220px] md:max-w-[420px] text-gray-800">
+          Freshness you can Trust,
+          Savings you will love!
         </h1>
 
-        <div className="flex items-center mt-4 md:mt-6 font-medium">
+        <div className="flex items-center mt-5 md:mt-7 font-medium">
 
           <Link
             to="/products"
-            className="group flex items-center justify-center gap-2 py-2.5 md:py-3 px-5 md:px-7 min-w-[120px] md:min-w-[150px] text-sm md:text-base text-white bg-orange-300 hover:bg-orange-500 transition rounded"
+            className="group flex items-center justify-center gap-2 py-2.5 md:py-3 px-5 md:px-7 text-sm md:text-base text-white bg-orange-300 hover:bg-orange-500 transition rounded-lg"
           >
             <img
               src={assets.white_arrow_icon}
