@@ -4,11 +4,11 @@ import { assets } from '../assets/assets.js';
 
 const MainBanner = () => {
   return (
-    <div className="relative h-[260px] sm:h-[320px] md:h-[500px] overflow-hidden">
+    <div className="<div className="relative h-[220px] sm:h-[300px] md:h-[500px] overflow-hidden rounded-xl">
 
       <picture>
         <source
-          media="(max-width: 2000px)"
+          media="(max-width: 768px)"
           srcSet={assets.main_banner_bg_sm}
         />
 
