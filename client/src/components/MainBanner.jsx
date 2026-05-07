@@ -7,9 +7,9 @@ const MainBanner = () => {
     <div className="relative">
 
       <picture>
-        <source media="(max-width: 768px)" srcSet={assets.main_banner_bg_sm} />
+        <source media="(max-width: 768px)" srcSet={assets.main_banner_bg_sm.png.jpeg} />
         <img
-          src={assets.main_banner_bg}
+          src={assets.main_banner_bg.jpeg}
           alt="banner"
           className="w-full"
           fetchpriority="high"
