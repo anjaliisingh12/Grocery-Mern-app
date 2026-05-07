@@ -15,18 +15,19 @@ const MainBanner = () => {
         <img
           src={assets.main_banner_bg}
           alt="banner"
-          className="w-full h-auto block"
+          className="w-full h-[220px] md:h-[500px] object-cover block"
           fetchpriority="high"
           loading="eager"
+          decoding="async"
           width="1200"
           height="500"
           sizes="100vw"
         />
       </picture>
 
-      <div className="absolute inset-0 flex flex-col items-start justify-end md:justify-center pb-24 md:pb-0 px-4">
+      <div className="absolute inset-0 flex flex-col items-start justify-end md:justify-center pb-6 md:pb-0 px-4 md:px-10">
 
-        <h1 className="text-xl md:text-4xl lg:text-5xl font-bold leading-tight max-w-72 md:max-w-xs">
+        <h1 className="text-xl md:text-4xl lg:text-5xl font-bold leading-tight max-w-[280px] md:max-w-[380px]">
           Freshness you can Trust, Savings you will love!
         </h1>
 
@@ -34,7 +35,7 @@ const MainBanner = () => {
 
           <Link
             to="/products"
-            className="group flex items-center gap-2 py-3 px-7 text-white bg-orange-300 hover:bg-orange-500 transition rounded"
+            className="group flex items-center justify-center gap-2 py-3 px-7 min-w-[140px] text-white bg-orange-300 hover:bg-orange-500 transition rounded"
           >
             <img
               src={assets.white_arrow_icon}
@@ -42,6 +43,7 @@ const MainBanner = () => {
               width="20"
               height="20"
               loading="lazy"
+              decoding="async"
             />
 
             <span>Shop now</span>
@@ -59,6 +61,7 @@ const MainBanner = () => {
               width="20"
               height="20"
               loading="lazy"
+              decoding="async"
             />
           </Link>
 
