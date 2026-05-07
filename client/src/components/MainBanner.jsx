@@ -8,7 +8,7 @@ const MainBanner = () => {
 
       <picture>
         <source
-          media="(max-width: 768px)"
+          media="(max-width: 2000px)"
           srcSet={assets.main_banner_bg_sm}
         />
 
